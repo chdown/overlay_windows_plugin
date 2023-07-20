@@ -1,11 +1,49 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-
-import 'package:flutter/services.dart';
+import 'package:overlay_windows_plugin/overlay_windows_api.g.dart';
 import 'package:overlay_windows_plugin/overlay_windows_plugin.dart';
 
 void main() {
   runApp(const MyApp());
+}
+
+@pragma("vm:entry-point")
+void overlayMain1() {
+  runApp(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: SafeArea(
+        child: Container(
+          color: Colors.red,
+          child: Center(
+            child: ElevatedButton(
+              onPressed: () {},
+              child: const Text('Overlay 1'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+@pragma("vm:entry-point")
+void overlayMain2() {
+  runApp(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: SafeArea(
+        child: Container(
+          color: Colors.red,
+          child: Center(
+            child: ElevatedButton(
+              onPressed: () {},
+              child: const Text('Overlay 2'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -16,34 +54,31 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-  final _overlayWindowsPlugin = OverlayWindowsPlugin();
+  final _overlayWindowsPlugin = OverlayWindowsPlugin.defaultInstance;
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      platformVersion =
-          await _overlayWindowsPlugin.getPlatformVersion() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
+  final List<String> _overlayWindowIds = [];
+
+  void showOverlay(String entryPointName) async {
+    var hasPermission = await _overlayWindowsPlugin.isPermissionGranted();
+    if (!hasPermission) {
+      _overlayWindowsPlugin.requestPermission();
+      return;
     }
+    var id = '$entryPointName-${_overlayWindowIds.length + 1}';
+    _overlayWindowIds.add(id);
+    _overlayWindowsPlugin.showOverlayWindow(id, entryPointName, OverlayWindowConfig(width: 300, height: 300, enableDrag: true));
+  }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
+  void closeOverlay(String entryPointName) async {
+    var ids = _overlayWindowIds.where((element) => element.startsWith(entryPointName)).toList();
+    ids.forEach((element) async {
+      _overlayWindowIds.remove(element);
+      _overlayWindowsPlugin.closeOverlayWindow(element);
     });
   }
 
@@ -55,7 +90,44 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      showOverlay("overlayMain1");
+                    },
+                    child: const Text("Show Overlay 1"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      closeOverlay("overlayMain1");
+                    },
+                    child: const Text("Close Overlay 1"),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      showOverlay("overlayMain2");
+                    },
+                    child: const Text("Show Overlay 2"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      closeOverlay("overlayMain2");
+                    },
+                    child: const Text("Close Overlay 2"),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
