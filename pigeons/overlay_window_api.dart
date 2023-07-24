@@ -69,4 +69,5 @@ abstract class OverlayWindowApi {
   void closeOverlayWindows(String overlayWindowId);
   bool isActive(String overlayWindowId);
   void setFlags(String overlayWindowId, OverlayFlag flag);
+  void resize(String overlayWindowId, int width, int height);
 }

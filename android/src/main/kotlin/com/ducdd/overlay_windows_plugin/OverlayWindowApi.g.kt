@@ -200,6 +200,7 @@ interface OverlayWindowApi {
   fun closeOverlayWindows(overlayWindowId: String)
   fun isActive(overlayWindowId: String): Boolean
   fun setFlags(overlayWindowId: String, flag: OverlayFlag)
+  fun resize(overlayWindowId: String, width: Long, height: Long)
 
   companion object {
     /** The codec used by OverlayWindowApi. */
@@ -310,6 +311,27 @@ interface OverlayWindowApi {
             var wrapped: List<Any?>
             try {
               api.setFlags(overlayWindowIdArg, flagArg)
+              wrapped = listOf<Any?>(null)
+            } catch (exception: Throwable) {
+              wrapped = wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.OverlayWindowApi.resize", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val overlayWindowIdArg = args[0] as String
+            val widthArg = args[1].let { if (it is Int) it.toLong() else it as Long }
+            val heightArg = args[2].let { if (it is Int) it.toLong() else it as Long }
+            var wrapped: List<Any?>
+            try {
+              api.resize(overlayWindowIdArg, widthArg, heightArg)
               wrapped = listOf<Any?>(null)
             } catch (exception: Throwable) {
               wrapped = wrapError(exception)

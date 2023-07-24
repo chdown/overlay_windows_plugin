@@ -9,17 +9,61 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import io.flutter.FlutterInjector
-import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.FlutterEngineGroup
 import io.flutter.embedding.engine.dart.DartExecutor
+import io.flutter.plugin.common.BasicMessageChannel
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.JSONMessageCodec
 
-class OverlayWindowServiceApi(context: Context, activity: Activity) : OverlayWindowApi {
+
+class OverlayWindowServiceApi(
+    binaryMessenger: BinaryMessenger,
+    context: Context,
+    activity: Activity
+) : OverlayWindowApi {
     private var _context: Context = context
     private var _activity: Activity = activity
+    private var engineGroup = FlutterEngineGroup(_context)
 
-    private val REQUEST_CODE_FOR_OVERLAY_PERMISSION = 1248
+
+
+    companion object {
+        const val REQUEST_CODE_FOR_OVERLAY_PERMISSION = 1248
+        lateinit var mainMessageChannel: BasicMessageChannel<Any?>
+    }
+
+    private val messageChannel = BasicMessageChannel(
+        binaryMessenger,
+        OverlayConstants.MESSAGE_CHANNEL,
+        JSONMessageCodec.INSTANCE
+    )
+
+    private var overlayMessageChannels = HashMap<String, BasicMessageChannel<Any?>?>();
+
+    init {
+        mainMessageChannel = messageChannel;
+        messageChannel.setMessageHandler { message, _ ->
+            try {
+                Log.d("messageChannel", message.toString())
+                //send message to overlay views when received message from main channel
+                overlayMessageChannels.forEach {
+                    Log.d("SendMessage: ", it.key)
+                    it.value?.send(message)
+                }
+            }
+            catch (ex: java.lang.Exception){
+                Log.d("messageChannel error", ex.toString())
+            }
+        }
+    }
+
+    fun destroy(){
+        overlayMessageChannels.clear();
+        messageChannel.setMessageHandler(null);
+    }
 
     override fun isPermissionGranted(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -36,25 +80,39 @@ class OverlayWindowServiceApi(context: Context, activity: Activity) : OverlayWin
         }
     }
 
-    override fun showOverlayWindows(overlayWindowId: String, entryPointName: String, overlayWindowConfig: OverlayWindowConfig) {
+    override fun showOverlayWindows(
+        overlayWindowId: String,
+        entryPointName: String,
+        overlayWindowConfig: OverlayWindowConfig
+    ) {
         if (!isPermissionGranted()) {
             throw Exception("PERMISSION:overlay permission is not enabled");
         }
 
-        var engineGroup = FlutterEngineGroup(_context)
+        var engine = FlutterEngineCache.getInstance().get(overlayWindowId)
+        if (engine == null) {
+            val dEntry = DartExecutor.DartEntrypoint(
+                FlutterInjector.instance().flutterLoader().findAppBundlePath(),
+                entryPointName
+            )
 
-        val dEntry = DartExecutor.DartEntrypoint(
-            FlutterInjector.instance().flutterLoader().findAppBundlePath(),
-            entryPointName
-        )
+            engine = engineGroup.createAndRunEngine(_context, dEntry)
+            FlutterEngineCache.getInstance().put(overlayWindowId, engine)
 
-        val engine: FlutterEngine = engineGroup.createAndRunEngine(_context, dEntry)
-        FlutterEngineCache.getInstance().put(entryPointName, engine)
+
+            var binaryMessenger = engine!!.dartExecutor.binaryMessenger;
+
+            overlayMessageChannels[overlayWindowId] = BasicMessageChannel(
+                binaryMessenger,
+                OverlayConstants.MESSAGE_CHANNEL,
+                JSONMessageCodec.INSTANCE
+            )
+        }
 
         var windowConfig = WindowConfig();
 
         windowConfig.width = overlayWindowConfig.width?.toInt() ?: -1
-        windowConfig.height = overlayWindowConfig.height?.toInt()  ?: -1
+        windowConfig.height = overlayWindowConfig.height?.toInt() ?: -1
         windowConfig.enableDrag = overlayWindowConfig.enableDrag ?: false
 
         windowConfig.overlayTitle = overlayWindowConfig.overlayTitle ?: ""
@@ -74,21 +132,47 @@ class OverlayWindowServiceApi(context: Context, activity: Activity) : OverlayWin
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
-        _context.startService(intent)
+        intent.action = "showOverlayWindows";
+
+        _context.startService(intent).runCatching { true }.getOrElse { false }
     }
 
     override fun closeOverlayWindows(overlayWindowId: String) {
-        val i = Intent(_context, OverlayService::class.java)
-        i.putExtra(OverlayService.CLOSE_OVERLAY_WINDOW, true)
-        i.putExtra(OverlayService.OVERLAY_WINDOW_ID, overlayWindowId)
-        _context.startService(i)
+        val intent = Intent(_context, OverlayService::class.java)
+        intent.action = "closeOverlayWindows";
+        intent.putExtra(OverlayService.CLOSE_OVERLAY_WINDOW, true)
+        intent.putExtra(OverlayService.OVERLAY_WINDOW_ID, overlayWindowId)
+
+        overlayMessageChannels[overlayWindowId] = null
+
+        _context.startService(intent).runCatching { true }.getOrElse { false }
     }
 
-    override fun isActive(entryPointName: String): Boolean {
-        TODO("Not yet implemented")
+    override fun isActive(overlayWindowId: String): Boolean {
+        val intent = Intent(_context, OverlayService::class.java)
+        intent.action = "isActive";
+        intent.putExtra(OverlayService.CLOSE_OVERLAY_WINDOW, true)
+        intent.putExtra(OverlayService.OVERLAY_WINDOW_ID, overlayWindowId)
+
+        return _context.startService(intent).runCatching { true }.getOrElse { false }
     }
 
-    override fun setFlags(entryPointName: String, flag: OverlayFlag) {
-        TODO("Not yet implemented")
+    override fun setFlags(overlayWindowId: String, flag: OverlayFlag) {
+        val intent = Intent(_context, OverlayService::class.java)
+        intent.action = "setFlags";
+        intent.putExtra(OverlayService.OVERLAY_WINDOW_FLAGS, flag.name)
+        intent.putExtra(OverlayService.OVERLAY_WINDOW_ID, overlayWindowId)
+
+        _context.startService(intent).runCatching { true }.getOrElse { false }
+    }
+
+    override fun resize(overlayWindowId: String, width: Long, height: Long) {
+        val intent = Intent(_context, OverlayService::class.java)
+        intent.action = "resize";
+        intent.putExtra(OverlayService.OVERLAY_WINDOW_SIZE_WIDTH, width.toInt())
+        intent.putExtra(OverlayService.OVERLAY_WINDOW_SIZE_HEIGHT, height.toInt())
+        intent.putExtra(OverlayService.OVERLAY_WINDOW_ID, overlayWindowId)
+
+        _context.startService(intent).runCatching { true }.getOrElse { false }
     }
 }
