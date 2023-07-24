@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:overlay_windows_plugin/overlay_windows_plugin.dart';
 import 'package:overlay_windows_plugin/overlay_windows_plugin_method_channel.dart';
 import 'package:overlay_windows_plugin/overlay_windows_plugin_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -17,9 +16,9 @@ void main() {
   });
 
   test('getPlatformVersion', () async {
-    OverlayWindowsPlugin overlayWindowsPlugin = OverlayWindowsPlugin();
-    MockOverlayWindowsPluginPlatform fakePlatform = MockOverlayWindowsPluginPlatform();
-    OverlayWindowsPluginPlatform.instance = fakePlatform;
+    // OverlayWindowsPlugin overlayWindowsPlugin = OverlayWindowsPlugin();
+    // MockOverlayWindowsPluginPlatform fakePlatform = MockOverlayWindowsPluginPlatform();
+    // OverlayWindowsPluginPlatform.instance = fakePlatform;
 
     // expect(await overlayWindowsPlugin.getPlatformVersion(), '42');
   });

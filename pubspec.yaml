@@ -1,10 +1,10 @@
 name: overlay_windows_plugin
-description: A new Flutter plugin project.
+description: The Flutter plugin to integrate with the Window Manager Service in the Android for showing overlay windows over other apps
 version: 0.0.1
-homepage:
+homepage: https://github.com/Hanmactu712/overlay_windows_plugin
 
 environment:
-  sdk: '>=3.0.6 <4.0.0'
+  sdk: ">=3.0.6 <4.0.0"
   flutter: ">=3.3.0"
 
 dependencies:
