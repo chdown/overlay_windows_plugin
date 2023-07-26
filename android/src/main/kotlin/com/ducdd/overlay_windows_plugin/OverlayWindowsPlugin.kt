@@ -1,6 +1,5 @@
 package com.ducdd.overlay_windows_plugin
 
-import OverlayWindowApi
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
