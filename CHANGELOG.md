@@ -1,3 +1,8 @@
+## 0.0.5
+
+-   apply github actions to publish the package
+-   update the link to demo
+
 ## 0.0.4
 
 -   Standardize to use the OverlayMessage as main message format for communicating between overlay windows and main view.
