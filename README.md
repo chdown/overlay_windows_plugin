@@ -8,7 +8,7 @@ This plugin is currently support Android only.
 
 ## Demo
 
-![Demo](docs\demo_overlay_plugin.gif 'overlay windows plugin')
+![Demo](doc\demo_overlay_plugin.gif 'overlay windows plugin')
 
 ## How to use
 
