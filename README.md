@@ -1,14 +1,14 @@
 # overlay_windows_plugin
 
 -   The Flutter plugin to integrate with the Window Manager Service in the Android for showing overlay windows over other apps.
--   There is no limit about the number of overlay will be shown at the same time and each overlay window could uses a different UI or layout as desired.
--   All the overlay windows could be able to communicate with the main view or others via message channel.
+-   There is no limit to the number of overlays that will be shown at the same time and each overlay window could use a different UI or layout as desired.
+-   All the overlay windows could be able to communicate with the main view or others via a message channel.
 
-This plugin is currently support Android only.
+This plugin currently supports Android only.
 
 ## Demo
 
-![Demo](doc\demo_overlay_plugin.gif 'overlay windows plugin')
+![Demo](doc/demo_overlay_plugin.gif 'overlay windows plugin')
 
 ## How to use
 
@@ -19,7 +19,7 @@ This plugin is currently support Android only.
         overlay_windows_plugin: any
 ```
 
--   Set up the permission in the AndroidManifest.xml in the android folder:
+-   Set up the permission in the AndroidManifest.xml in the Android folder:
 
 ```
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
