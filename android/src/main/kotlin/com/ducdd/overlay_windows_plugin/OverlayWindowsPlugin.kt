@@ -80,7 +80,6 @@ class OverlayWindowsPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Activi
             "requestCode: $requestCode, resultCode: $resultCode, data: ${data.toString()}"
         )
         if (requestCode == OverlayWindowServiceApi.REQUEST_CODE_FOR_OVERLAY_PERMISSION) {
-//      _pendingResult?.success(checkOverlayPermission());
             if (checkOverlayPermission())
                 return true;
         }

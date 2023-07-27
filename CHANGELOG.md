@@ -1,3 +1,8 @@
+## 0.0.4
+
+-   Standardize to use the OverlayMessage as main message format for communicating between overlay windows and main view.
+-   Update docs
+
 ## 0.0.3
 
 -   fix issues

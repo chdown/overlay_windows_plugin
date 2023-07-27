@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:overlay_windows_plugin/overlay_message.dart';
 import 'package:overlay_windows_plugin/overlay_window_view.dart';
 
 class OverlayMain2 extends StatefulWidget {
@@ -21,9 +22,9 @@ class _OverlayMain2State extends State<OverlayMain2> {
 
   String message = "";
 
-  void onMessage(dynamic mes) {
+  void onMessage(OverlayMessage mes) {
     setState(() {
-      message = mes;
+      message = mes.message as String;
     });
   }
 

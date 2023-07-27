@@ -215,11 +215,9 @@ class OverlayView(
     @RequiresApi(Build.VERSION_CODES.KITKAT)
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(p0: View?, event: MotionEvent?): Boolean {
-//        Log.d("onTouch", "${p0.toString()} - event: ${event.toString()}")
-
         if (event != null) {
             var encodedMessage = HashMap<String, Any>();
-            encodedMessage["overlayViewId"] = viewId;
+            encodedMessage["overlayWindowId"] = viewId;
 
             var encodedMotionEvent = HashMap<String, Any>();
             encodedMotionEvent["action"] = event.action;

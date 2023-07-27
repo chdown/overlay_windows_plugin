@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/services.dart';
@@ -22,8 +21,8 @@ class OverlayWindowsPlugin {
 
   BasicMessageChannel? _messageChannel;
 
-  final StreamController _messageStreamController = StreamController.broadcast();
-  final StreamController _touchEventStreamController = StreamController.broadcast();
+  final StreamController<OverlayMessage> _messageStreamController = StreamController.broadcast();
+  final StreamController<OverlayMessage> _touchEventStreamController = StreamController.broadcast();
 
   // static List<OverlayWindowView> overlayViews = [];
 
@@ -36,18 +35,19 @@ class OverlayWindowsPlugin {
 
   Future<void> onMessage(dynamic message) async {
     try {
-      log('OverlayWindowsPlugin ~ message:  $message');
-      if (message['type'] == 'TouchEvent') {
-        _touchEventStreamController.add(message);
+      // log('OverlayWindowsPlugin ~ message:  $message');
+      var overlayMessage = OverlayMessage.fromJson(message);
+      if (overlayMessage.type == 'TouchEvent') {
+        _touchEventStreamController.add(overlayMessage);
         return;
-      } else if (message['type'] == 'Action') {
-        var method = jsonDecode(message['message']) as String;
+      } else if (overlayMessage.type == 'Action') {
+        var method = overlayMessage.message as String;
         if (method == "Close") {
-          await closeOverlayWindow(message['overlayWindowId'] as String);
+          await closeOverlayWindow(overlayMessage.overlayWindowId);
         }
         return;
       }
-      _messageStreamController.add(message);
+      _messageStreamController.add(overlayMessage);
     } catch (e) {
       log('onMessage error: $e');
     }
@@ -78,8 +78,8 @@ class OverlayWindowsPlugin {
     }
   }
 
-  Stream<dynamic> get messageStream => _messageStreamController.stream;
-  Stream<dynamic> get touchEventStream => _touchEventStreamController.stream;
+  Stream<OverlayMessage> get messageStream => _messageStreamController.stream;
+  Stream<OverlayMessage> get touchEventStream => _touchEventStreamController.stream;
 
   Future sendMessage(String overlayWindowId, dynamic message) async {
     try {

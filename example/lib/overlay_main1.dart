@@ -26,12 +26,9 @@ class _OverlayMain1State extends State<OverlayMain1> {
     });
 
     view.messageStream.listen((mes) {
-      // var mes = OverlayMessage.fromJson(event);
-      // log('$viewId: $mes');
+      log('$viewId: $mes');
       setState(() {
-        // var tempMes = JsonDecoder(mes.message) as String;
-        log('$viewId: $mes');
-        message = mes;
+        message = mes.message as String;
       });
     });
   }
@@ -70,7 +67,7 @@ class _OverlayMain1State extends State<OverlayMain1> {
                 onPressed: () {
                   view.close();
                 },
-                child: const Text('Close}'),
+                child: const Text('Close'),
               ),
             ),
           ],

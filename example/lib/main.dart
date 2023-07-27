@@ -47,9 +47,8 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _overlayWindowsPlugin.messageStream.listen((event) {
-      final mes = OverlayMessage.fromJson(event);
       setState(() {
-        message.add(mes);
+        message.add(event);
       });
     });
     _overlayWindowsPlugin.touchEventStream.listen((event) {});

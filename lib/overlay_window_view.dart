@@ -11,10 +11,10 @@ class OverlayWindowView {
   final StreamController<String> _stateStreamController = StreamController.broadcast();
 
   BasicMessageChannel<dynamic>? messageChannel = const BasicMessageChannel<dynamic>('dev.ducdd.OverlayWindowApi.messageChannel', JSONMessageCodec());
-  final StreamController<dynamic> _messageStreamController = StreamController.broadcast();
+  final StreamController<OverlayMessage> _messageStreamController = StreamController.broadcast();
 
   Stream get stateChangedStream => _stateStreamController.stream;
-  Stream get messageStream => _messageStreamController.stream;
+  Stream<OverlayMessage> get messageStream => _messageStreamController.stream;
 
   OverlayWindowView() {
     methodChannel.setMethodCallHandler((call) async {
@@ -47,7 +47,7 @@ class OverlayWindowView {
     try {
       log('OverlayWindowView  ~ message:  $message');
       var overlayMessage = OverlayMessage.fromJson(message);
-      _messageStreamController.add(overlayMessage.message);
+      _messageStreamController.add(overlayMessage);
     } catch (e) {
       log('onMessage error: $e');
     }

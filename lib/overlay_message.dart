@@ -8,9 +8,12 @@ class OverlayMessage {
   OverlayMessage(this.overlayWindowId, this.message, this.type);
 
   factory OverlayMessage.fromJson(Map<String, dynamic> json) {
+    var message = json['message'];
+    var overlayMessage = message is Map ? json['message'] as dynamic : jsonDecode(json['message']) as dynamic;
+    var id = json['overlayWindowId'] != null ? json['overlayWindowId'].toString() : "";
     return OverlayMessage(
-      json['overlayWindowId'] as String,
-      jsonDecode(json['message']) as dynamic,
+      id,
+      overlayMessage,
       json['type'] as String,
     );
   }
