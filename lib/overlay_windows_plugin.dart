@@ -108,6 +108,24 @@ class OverlayWindowsPlugin {
     }
   }
 
+  Future<void> updateShow(String overlayWindowId, bool isShow) async {
+    try {
+      await api.updateShow(overlayWindowId, isShow);
+    } catch (e) {
+      log('updateShow error: $e');
+    }
+  }
+
+  Future<bool> isShow(String overlayWindowId) async {
+    try {
+      var result = await api.isShow(overlayWindowId);
+      return result;
+    } catch (e) {
+      log('isShow error: $e');
+      return false;
+    }
+  }
+
   Future<void> setFlags(String overlayWindowId, OverlayFlag flag) async {
     try {
       return await api.setFlags(overlayWindowId, flag);

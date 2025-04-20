@@ -13,12 +13,14 @@ import android.util.TypedValue
 import android.view.Display
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewStub
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import io.flutter.embedding.android.FlutterTextureView
 import io.flutter.embedding.android.FlutterView
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
+import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.plugin.common.BasicMessageChannel
 import io.flutter.plugin.common.JSONMessageCodec
 import io.flutter.plugin.common.MethodChannel
@@ -61,7 +63,18 @@ class OverlayView(
         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
 
-    private val engine: FlutterEngine = FlutterEngineCache.getInstance()[viewId]!!
+    private val engine: FlutterEngine by lazy {
+        FlutterEngineCache.getInstance().get(viewId) ?: run {
+            val newEngine = FlutterEngine(context).apply {
+                dartExecutor.executeDartEntrypoint(
+                    DartExecutor.DartEntrypoint.createDefault()
+                )
+                lifecycleChannel.appIsResumed()
+            }
+            FlutterEngineCache.getInstance().put(viewId, newEngine)
+            newEngine
+        }
+    }
     private val overlayMessageChannel = BasicMessageChannel(
         engine.dartExecutor.binaryMessenger,
         OverlayConstants.MESSAGE_CHANNEL,
@@ -80,6 +93,7 @@ class OverlayView(
             _windowManager.removeView(flutterView!!)
             flutterView!!.detachFromFlutterEngine()
             FlutterEngineCache.getInstance().remove(viewId);
+            engine.lifecycleChannel.appIsDetached()
             engine.destroy()
         }
     }
@@ -91,12 +105,13 @@ class OverlayView(
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     fun add() {
-        flutterView = FlutterView(_context, FlutterTextureView(_context))
-        flutterView!!.attachToFlutterEngine(engine)
-        flutterView!!.fitsSystemWindows = true
-        flutterView!!.isFocusable = true
-        flutterView!!.isFocusableInTouchMode = true
-        flutterView!!.setBackgroundColor(Color.TRANSPARENT)
+        flutterView = FlutterView(_context, FlutterTextureView(_context)).apply {
+            attachToFlutterEngine(engine)
+            fitsSystemWindows = true
+            isFocusable = true
+            isFocusableInTouchMode = true
+            setBackgroundColor(Color.TRANSPARENT)
+        }
 
         _windowManager.defaultDisplay.getSize(_windowSize)
 
@@ -126,6 +141,8 @@ class OverlayView(
             "dev.ducdd.OverlayWindowApi.methodChannel"
         )
         channel.invokeMethod("setOverlayWindowId", viewId);
+        
+        engine.lifecycleChannel.appIsResumed()
     }
 
     fun updateOverlayFlag(flag: String) {
@@ -142,6 +159,18 @@ class OverlayView(
             }
             _windowManager!!.updateViewLayout(flutterView, params)
         }
+    }
+
+    fun updateShow(isShow: Boolean) {
+        if (_windowManager != null) {
+            val params = flutterView!!.layoutParams as WindowManager.LayoutParams
+            flutterView!!.visibility = if(isShow) View.VISIBLE else View.GONE
+            _windowManager.updateViewLayout(flutterView, params)
+        }
+    }
+
+    fun isShow(): Boolean {
+        return flutterView!!.visibility == View.VISIBLE
     }
 
     fun resize(width: Int, height: Int) {

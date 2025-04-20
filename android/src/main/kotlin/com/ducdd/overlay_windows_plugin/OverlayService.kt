@@ -20,6 +20,7 @@ class OverlayService : Service(), java.io.Serializable {
         const val OVERLAY_WINDOW_ID = "overlay_window_id"
         const val OVERLAY_WINDOW_FLAGS = "overlay_window_flags"
         const val OVERLAY_WINDOW_SIZE_WIDTH = "overlay_window_size_x"
+        const val OVERLAY_IS_SHOW = "overlay_is_show"
         const val OVERLAY_WINDOW_SIZE_HEIGHT = "overlay_window_size_y"
     }
 
@@ -102,6 +103,19 @@ class OverlayService : Service(), java.io.Serializable {
             } else if (action == "isActive") {
                 var existView: OverlayView? =
                     _views.find { x -> x.viewId == viewId } ?: throw Exception("Inactive")
+            } else if (action == "updateShow") {
+                var existView: OverlayView? =
+                    _views.find { x -> x.viewId == viewId } ?: throw Exception("Inactive")
+                var isShow = true;
+                if (intent.extras!!.containsKey(OVERLAY_IS_SHOW)) {
+                    isShow = intent.getBooleanExtra(OVERLAY_IS_SHOW, true)
+                }
+                existView?.updateShow(isShow)
+            } else if (action == "isShow") {
+                var existView: OverlayView? =
+                    _views.find { x -> x.viewId == viewId } ?: throw Exception("Inactive")
+                var isShow = existView?.isShow()
+                if(!isShow!!) throw Exception("Inactive")
             } else if (action == "setFlags") {
 
                 var existView: OverlayView? =

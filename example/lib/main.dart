@@ -106,11 +106,34 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  void showedOverlay(String entryPointName) async {
+    var ids = _overlayWindowIds.where((element) => element.startsWith(entryPointName)).toList();
+    ids.forEach((element) async {
+      _overlayWindowsPlugin.updateShow(element, true);
+    });
+  }
+
+  void hideOverlay(String entryPointName) async {
+    var ids = _overlayWindowIds.where((element) => element.startsWith(entryPointName)).toList();
+    ids.forEach((element) async {
+      _overlayWindowsPlugin.updateShow(element, false);
+    });
+  }
+
+  void isShow(String entryPointName) async {
+    var ids = _overlayWindowIds.where((element) => element.startsWith(entryPointName)).toList();
+    ids.forEach((element) async {
+     bool isShow = await _overlayWindowsPlugin.isActive(element);
+     print("===========$isShow");
+    });
+  }
+
   void sendMessage() {
     _overlayWindowsPlugin.sendMessage("", "Hello from main");
   }
 
   int clickTime = 0;
+
   void setOverlayFlag(String entryPointName) {
     var ids = _overlayWindowIds.where((element) => element.startsWith(entryPointName)).toList();
     if (clickTime > 2) {
@@ -130,6 +153,7 @@ class _MyAppState extends State<MyApp> {
 
   int initWidth = 300;
   int initHeight = 300;
+
   void increaseSize() {
     setState(() {
       initWidth += 20;
@@ -156,8 +180,7 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
                 children: [
                   ElevatedButton(
                     onPressed: () {
@@ -170,6 +193,24 @@ class _MyAppState extends State<MyApp> {
                       closeOverlay("overlayMain1");
                     },
                     child: const Text("Close 1"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      showedOverlay("overlayMain1");
+                    },
+                    child: const Text("Show 1"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      hideOverlay("overlayMain1");
+                    },
+                    child: const Text("Hide 1"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      isShow("overlayMain1");
+                    },
+                    child: const Text("isShow 1"),
                   ),
                   ElevatedButton(
                     onPressed: () {

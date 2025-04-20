@@ -199,6 +199,8 @@ interface OverlayWindowApi {
   fun showOverlayWindows(overlayWindowId: String, entryPointName: String, config: OverlayWindowConfig)
   fun closeOverlayWindows(overlayWindowId: String)
   fun isActive(overlayWindowId: String): Boolean
+  fun updateShow(overlayWindowId: String, isShow: Boolean)
+  fun isShow(overlayWindowId: String): Boolean
   fun setFlags(overlayWindowId: String, flag: OverlayFlag)
   fun resize(overlayWindowId: String, width: Long, height: Long)
 
@@ -333,6 +335,44 @@ interface OverlayWindowApi {
             try {
               api.resize(overlayWindowIdArg, widthArg, heightArg)
               wrapped = listOf<Any?>(null)
+            } catch (exception: Throwable) {
+              wrapped = wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.OverlayWindowApi.updateShow", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val overlayWindowIdArg = args[0] as String
+            val isShowArg = args[1] as Boolean
+            var wrapped: List<Any?>
+            try {
+              api.updateShow(overlayWindowIdArg, isShowArg)
+              wrapped = listOf<Any?>(null)
+            } catch (exception: Throwable) {
+              wrapped = wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.OverlayWindowApi.isShow", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val overlayWindowIdArg = args[0] as String
+            var wrapped: List<Any?>
+            try {
+              wrapped = listOf<Any?>(api.isShow(overlayWindowIdArg))
             } catch (exception: Throwable) {
               wrapped = wrapError(exception)
             }

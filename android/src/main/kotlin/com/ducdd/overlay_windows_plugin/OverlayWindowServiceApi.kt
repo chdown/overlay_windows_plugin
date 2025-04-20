@@ -145,6 +145,22 @@ class OverlayWindowServiceApi(
         _context.startService(intent).runCatching { true }.getOrElse { false }
     }
 
+    override fun updateShow(overlayWindowId: String, isShow: Boolean) {
+        val intent = Intent(_context, OverlayService::class.java)
+        intent.action = "updateShow"
+        intent.putExtra(OverlayService.OVERLAY_WINDOW_ID, overlayWindowId)
+        intent.putExtra(OverlayService.OVERLAY_IS_SHOW, isShow)
+        _context.startService(intent)
+    }
+
+    override fun isShow(overlayWindowId: String): Boolean {
+        val intent = Intent(_context, OverlayService::class.java)
+        intent.action = "isShow"
+        intent.putExtra(OverlayService.OVERLAY_WINDOW_ID, overlayWindowId)
+
+        return _context.startService(intent).runCatching { true }.getOrElse { false }
+    }
+
     override fun isActive(overlayWindowId: String): Boolean {
         val intent = Intent(_context, OverlayService::class.java)
         intent.action = "isActive";
